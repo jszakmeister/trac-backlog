@@ -22,9 +22,9 @@ BACKLOG_QUERY = '''SELECT p.value AS __color__,
    reporter AS _reporter
   FROM ticket t
   LEFT JOIN enum p ON p.name = t.priority AND p.type = 'priority'
-  LEFT JOIN backlog_priority_table bp ON bp.ticket_id = t.id 
+  LEFT JOIN backlog bp ON bp.ticket_id = t.id 
   WHERE status <> 'closed'
-  ORDER BY bp.priority, CAST(p.value AS int), milestone, t.type, time
+  ORDER BY bp.rank, CAST(p.value AS int), milestone, t.type, time
 '''
 
 
@@ -52,13 +52,33 @@ class BacklogPlugin(Component):
                         str(schema_version)))
 
     def environment_needs_upgrade(self, db):
+        print "Needs upgrade called!"
         cur = db.cursor()
         cur.execute("SELECT value FROM system WHERE name='backlog_schema_version'")
         row = cur.fetchone()
         if not row or int(row[0]) < schema_version:
             return True
 
+        cur.execute("SELECT COUNT(*) FROM ticket")
+        tickets = cur.fetchone()[0]
+
+        no_backlog = False
+        try:
+            cur.execute("SELECT COUNT(*) FROM backlog")
+            backlog_entries = cur.fetchone()[0]
+        except OperationalError:
+            no_backlog = True
+
+        if no_backlog:
+            return True
+
+        if tickets != backlog_entries:
+            return True
+
+        return False
+
     def upgrade_environment(self, db):
+        print "Upgrade called"
         cur = db.cursor()
         cur.execute("SELECT value FROM system WHERE name='backlog_schema_version'")
         row = cur.fetchone()
@@ -70,6 +90,19 @@ class BacklogPlugin(Component):
           ### We'll implement that later. :-)
           pass
 
+        # Make sure that all tickets have a rank
+        cur.execute("SELECT t.id FROM ticket AS t LEFT JOIN backlog " +
+                    "ON t.id = backlog.ticket_id WHERE backlog.ticket_id IS NULL")
+
+        for row in cur.fetchall():
+            ticket_id = row[0]
+            print ticket_id
+
+            # Insert a default rank for the ticket, using the ticket id
+            cur.execute("INSERT INTO backlog VALUES (%s,%s)",
+                        (ticket_id, ticket_id))
+
+        db.commit()
 
     # INavigationContributor methods
     def get_active_navigation_item(self, req):
@@ -94,7 +127,7 @@ class BacklogPlugin(Component):
         cursor = db.cursor()
 
         try:
-            cursor.execute("INSERT INTO backlog_priority_table VALUES (%s, %s)",
+            cursor.execute("INSERT INTO backlog VALUES (%s, %s)",
                            (ticket.id, ticket.id))
             db.commit()
         except:
@@ -176,32 +209,32 @@ class BacklogPlugin(Component):
         try:
             cursor = db.cursor()
 
-            cursor.execute('SELECT priority FROM backlog_priority_table WHERE ticket_id = %s',
+            cursor.execute('SELECT rank FROM backlog WHERE ticket_id = %s',
                            (ticket_id,))
-            old_priority = cursor.fetchone()[0]
+            old_rank = cursor.fetchone()[0]
 
-            cursor.execute('SELECT priority FROM backlog_priority_table WHERE ticket_id = %s',
+            cursor.execute('SELECT rank FROM backlog WHERE ticket_id = %s',
                            (before_ticket_id,))
-            new_priority = cursor.fetchone()[0]
+            new_rank = cursor.fetchone()[0]
 
-            if new_priority > old_priority:
+            if new_rank > old_rank:
                 cursor.execute(
-                    'UPDATE backlog_priority_table SET priority = priority - 1 WHERE priority > %s AND priority < %s',
-                    (old_priority, new_priority))
-                new_priority -= 1
+                    'UPDATE backlog SET rank = rank - 1 WHERE rank > %s AND rank < %s',
+                    (old_rank, new_rank))
+                new_rank -= 1
             else:
                 cursor.execute(
-                    'UPDATE backlog_priority_table SET priority = priority + 1 WHERE priority >= %s AND priority < %s',
-                    (new_priority, old_priority))
+                    'UPDATE backlog SET rank = rank + 1 WHERE rank >= %s AND rank < %s',
+                    (new_rank, old_rank))
 
             cursor.execute(
-                'UPDATE backlog_priority_table SET priority = %s WHERE ticket_id = %s',
-                (new_priority, ticket_id))
+                'UPDATE backlog SET rank = %s WHERE ticket_id = %s',
+                (new_rank, ticket_id))
 
             db.commit()
         except:
             db.rollback()
-            to_result['msg'] = 'Error trying to update priority'
+            to_result['msg'] = 'Error trying to update rank'
             import traceback
             print traceback.print_exc()
 
@@ -230,32 +263,32 @@ class BacklogPlugin(Component):
         try:
             cursor = db.cursor()
 
-            cursor.execute('SELECT priority FROM backlog_priority_table WHERE ticket_id = %s',
+            cursor.execute('SELECT rank FROM backlog WHERE ticket_id = %s',
                            (ticket_id,))
-            old_priority = cursor.fetchone()[0]
+            old_rank = cursor.fetchone()[0]
 
-            cursor.execute('SELECT priority FROM backlog_priority_table WHERE ticket_id = %s',
+            cursor.execute('SELECT rank FROM backlog WHERE ticket_id = %s',
                            (after_ticket_id,))
-            new_priority = cursor.fetchone()[0]
+            new_rank = cursor.fetchone()[0]
 
-            if old_priority < new_priority:
+            if old_rank < new_rank:
                 cursor.execute(
-                    'UPDATE backlog_priority_table SET priority = priority - 1 WHERE priority > %s AND priority <= %s',
-                    (old_priority, new_priority))
-            elif old_priority >= new_priority:
+                    'UPDATE backlog SET rank = rank - 1 WHERE rank > %s AND rank <= %s',
+                    (old_rank, new_rank))
+            elif old_rank >= new_rank:
                 cursor.execute(
-                    'UPDATE backlog_priority_table SET priority = priority - 1 WHERE priority > %s AND priority <= %s',
-                    (old_priority, new_priority))
-                new_priority += 1
+                    'UPDATE backlog SET rank = rank - 1 WHERE rank > %s AND rank <= %s',
+                    (old_rank, new_rank))
+                new_rank += 1
 
             cursor.execute(
-                'UPDATE backlog_priority_table SET priority = %s WHERE ticket_id = %s',
-                (new_priority, ticket_id))
+                'UPDATE backlog SET rank = %s WHERE ticket_id = %s',
+                (new_rank, ticket_id))
 
             db.commit()
         except:
             db.rollback()
-            to_result['msg'] = 'Error trying to update priority'
+            to_result['msg'] = 'Error trying to update rank'
             raise
 
         data = simplejson.dumps(to_result)

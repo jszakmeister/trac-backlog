@@ -6,9 +6,9 @@ schema_version = 1
 
 # The database schema for the backlog module
 schema = [
-  Table('backlog_priority_table', key='ticket_id')[
+  Table('backlog', key='ticket_id')[
     Column('ticket_id', type='int', unique=True),
-    Column('priority', type='int'),
+    Column('rank', type='int'),
   ]
 ]
 
