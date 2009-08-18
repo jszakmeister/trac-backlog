@@ -6,31 +6,38 @@ from trac.db import DatabaseManager
 from trac.env import IEnvironmentSetupParticipant
 from trac.ticket.api import ITicketChangeListener
 from trac.ticket.model import Ticket
-from trac.web.chrome import INavigationContributor, ITemplateProvider, add_script
+from trac.web.chrome import INavigationContributor, ITemplateProvider
+from trac.web.chrome import add_script, add_stylesheet
 from trac.web.main import IRequestHandler
 from trac.web.api import HTTPBadRequest
+from trac.util.datefmt import format_date
 from trac.util.html import html
 
 from backlog.schema import schema_version, schema
 
 
 BACKLOG_QUERY = '''SELECT p.value AS __color__,
-   id AS ticket, summary, component, version, milestone, t.type AS type, 
+   id AS ticket, summary, component, version, milestone, t.type AS type,
    owner, status,
    time AS created,
    changetime AS _changetime, description AS _description,
    reporter AS _reporter
   FROM ticket t
   LEFT JOIN enum p ON p.name = t.priority AND p.type = 'priority'
-  LEFT JOIN backlog bp ON bp.ticket_id = t.id 
+  LEFT JOIN backlog bp ON bp.ticket_id = t.id
   WHERE status <> 'closed'
   ORDER BY bp.rank, CAST(p.value AS int), milestone, t.type, time
+'''
+
+MILESTONE_QUERY = '''SELECT name, due FROM milestone
+  WHERE completed == 0
+  ORDER BY (due == 0), due, name
 '''
 
 
 
 class BacklogPlugin(Component):
-    implements(INavigationContributor, IRequestHandler, 
+    implements(INavigationContributor, IRequestHandler,
                IEnvironmentSetupParticipant, ITemplateProvider,
                ITicketChangeListener)
 
@@ -84,11 +91,11 @@ class BacklogPlugin(Component):
         row = cur.fetchone()
 
         if not row:
-          self.environment_created()
+            self.environment_created()
         elif int(row[0]) < schema_version:
-          ### Pass we need to do an upgrade...
-          ### We'll implement that later. :-)
-          pass
+            ### Pass we need to do an upgrade...
+            ### We'll implement that later. :-)
+            pass
 
         # Make sure that all tickets have a rank
         cur.execute("SELECT t.id FROM ticket AS t LEFT JOIN backlog " +
@@ -151,14 +158,14 @@ class BacklogPlugin(Component):
     def process_request(self, req):
         req.perm.require('TICKET_VIEW')
         if req.method == 'POST':
-           req.perm.require('TICKET_MODIFY')
+            req.perm.require('TICKET_MODIFY')
 
-           if 'move_after' in req.path_info:
-               return self._move_after(req)
-           elif 'move_before' in req.path_info:
-               return self._move_before(req)
-           else:
-               raise HTTPBadRequest("Invalid POST request")
+            if 'move_after' in req.path_info:
+                return self._move_after(req)
+            elif 'move_before' in req.path_info:
+                return self._move_before(req)
+            else:
+                raise HTTPBadRequest("Invalid POST request")
 
         data = {
             'title': 'Backlog',
@@ -170,11 +177,13 @@ class BacklogPlugin(Component):
 
         data['tickets'] = self._get_active_tickets()
         data['form_token'] = req.form_token
+        data['active_milestones'] = self._get_active_milestones()
 
         if 'TICKET_MODIFY' in req.perm:
             data['allow_sorting'] = True
 
         add_script(req, 'backlog/js/jquery-ui.js')
+        add_stylesheet(req, 'backlog/css/backlog.css')
         return 'backlog.html', data, None
 
     def _get_active_tickets(self):
@@ -302,4 +311,21 @@ class BacklogPlugin(Component):
         req.end_headers()
         req.write(data)
 
+    def _get_active_milestones(self):
+        db = self.env.get_db_cnx()
 
+        cursor = db.cursor()
+
+        cursor.execute(MILESTONE_QUERY)
+
+        rows = cursor.fetchall()
+
+        print "Got %d rows" % len(rows)
+
+        results = []
+        for row in rows:
+            d = dict(name=row[0],
+                     due=(row[1] and format_date(row[1])) or '--')
+            results.append(d)
+
+        return results

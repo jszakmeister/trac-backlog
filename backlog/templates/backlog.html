@@ -14,70 +14,80 @@
 
       <h1>Backlog</h1>
 
-      <table class="listing tickets">
-        <thead>
-          <tr>
-            <th>Id</th>
-            <th>Summary</th>
-            <th>Component</th>
-            <th>Version</th>
-            <th>Milestone</th>
-            <th>Type</th>
-            <th>Owner</th>
-            <th>Status</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-        <tbody id="tickets">
-          <tr py:for="ticket in tickets" id="ticket_${ticket.id}">
-              <td><a href="./ticket/${ticket.id}">#$ticket.id</a></td>
-              <td><a href="./ticket/${ticket.id}">$ticket.summary</a></td>
-              <td>$ticket.component</td>
-              <td>$ticket.version</td>
-              <td>$ticket.milestone</td>
-              <td>$ticket.type</td>
-              <td>$ticket.owner</td>
-              <td>$ticket.status</td>
-              <td>${format_datetime(ticket.time_created)}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div>
+        <div style="width:80%; float: left;">
+          <table class="listing tickets">
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th>Summary</th>
+                <th>Component</th>
+                <th>Version</th>
+                <th>Milestone</th>
+                <th>Type</th>
+                <th>Owner</th>
+                <th>Status</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="tickets">
+              <tr py:for="ticket in tickets" id="ticket_${ticket.id}">
+                  <td><a href="./ticket/${ticket.id}">#$ticket.id</a></td>
+                  <td><a href="./ticket/${ticket.id}">$ticket.summary</a></td>
+                  <td>$ticket.component</td>
+                  <td>$ticket.version</td>
+                  <td>$ticket.milestone</td>
+                  <td>$ticket.type</td>
+                  <td>$ticket.owner</td>
+                  <td>$ticket.status</td>
+                  <td>${format_datetime(ticket.time_created)}</td>
+              </tr>
+            </tbody>
+          </table>
 
-      <script type="text/javascript" py:if="allow_sorting">
-        function onStop(event, ui) {
-            var item = ui.item[0];
-            var nextItem = item.nextElementSibling;
-            var prevItem = item.previousElementSibling;
+          <script type="text/javascript" py:if="allow_sorting">
+            function onStop(event, ui) {
+                var item = ui.item[0];
+                var nextItem = item.nextElementSibling;
+                var prevItem = item.previousElementSibling;
 
-            if (nextItem == null) {
-                // We've been moved to the end of the list
-                movedItemId = item.id.split("_")[1];
-                afterItemId = prevItem.id.split("_")[1];
+                if (nextItem == null) {
+                    // We've been moved to the end of the list
+                    movedItemId = item.id.split("_")[1];
+                    afterItemId = prevItem.id.split("_")[1];
 
-                $.ajax({url: "backlog/move_after",
-                        data: {ticket_id: movedItemId, after_ticket_id: afterItemId, __FORM_TOKEN: "$form_token"},
-                        dataType: "json",
-                        type: "post",
-                        success: function(returnData, status) { },
-                        error: function(errorObj, errorString) { document.write(errorObj.responseText);},
-                        });
-            } else {
-                // We've been moved anywhere else
-                movedItemId = item.id.split("_")[1];
-                beforeItemId = nextItem.id.split("_")[1];
+                    $.ajax({url: "backlog/move_after",
+                            data: {ticket_id: movedItemId, after_ticket_id: afterItemId, __FORM_TOKEN: "$form_token"},
+                            dataType: "json",
+                            type: "post",
+                            success: function(returnData, status) { },
+                            error: function(errorObj, errorString) { document.write(errorObj.responseText);},
+                            });
+                } else {
+                    // We've been moved anywhere else
+                    movedItemId = item.id.split("_")[1];
+                    beforeItemId = nextItem.id.split("_")[1];
 
-                $.ajax({url: "backlog/move_before",
-                        data: {ticket_id: movedItemId, before_ticket_id: beforeItemId, __FORM_TOKEN: "$form_token"},
-                        dataType: "json",
-                        type: "post",
-                        success: function(returnData, status) { },
-                        error: function(errorObj, errorString) { alert("fail?\n" + errorString); },
-                        });
-             }
-        }
+                    $.ajax({url: "backlog/move_before",
+                            data: {ticket_id: movedItemId, before_ticket_id: beforeItemId, __FORM_TOKEN: "$form_token"},
+                            dataType: "json",
+                            type: "post",
+                            success: function(returnData, status) { },
+                            error: function(errorObj, errorString) { alert("fail?\n" + errorString); },
+                            });
+                 }
+            }
 
-        $("#tickets").sortable({axis:'y', items:'tr', stop: onStop});
-      </script>
+            $("#tickets").sortable({axis:'y', items:'tr', stop: onStop});
+          </script>
+        </div>
+        <div class="milestone_list">
+          <div py:for="milestone in active_milestones" class="milestone">
+            <h4>${milestone.name}</h4>
+            <p>Due: ${milestone.due}</p>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
 </html>

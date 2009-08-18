@@ -1,0 +1,26 @@
+.milestone_list {
+    float:left;
+    width: 15%;
+    margin: 1em 0 0 15px;
+}
+
+.milestone {
+    border: #d7d7d7 solid 1px;
+    margin-bottom: 18px;
+}
+
+.milestone h4 {
+    background: #f7f7f7;
+    font-weight: bold;
+    font-size: 12px;
+    text-align: center;
+    border-bottom: 1px solid #999;
+    height: 17px;
+    margin: 0;
+    padding: 0;
+}
+
+.milestone p {
+    margin: 0;
+    padding: 8px;
+}
