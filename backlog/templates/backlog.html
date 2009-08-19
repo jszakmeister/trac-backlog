@@ -49,6 +49,16 @@
                 sendAjax("backlog/move_before", data);
             }
 
+            function assignMilestone(ticketId, milestoneId) {
+                var ticket = ticketId.split("_")[1];
+
+                var data = { ticket_id: ticket,
+                            milestone: milestoneId,
+                            __FORM_TOKEN: "$form_token"};
+
+                sendAjax("backlog/assign", data);
+            }
+
             function onDropLocal(nodes, copy) {
                 var node = nodes[0];
                 var prevNode = null;
@@ -78,6 +88,8 @@
                 dojo.style(m, { background: "transparent" });
                 nodes.forEach(function(node, idx, arr){
                     // Relay the milestone change back home
+                    assignMilestone(node.id, "${milestone.name}");
+
                     // Remove the node from the target
                     console.log("destroy", node);
                     dojo.destroy(node);

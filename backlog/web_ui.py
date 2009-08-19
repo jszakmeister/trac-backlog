@@ -12,6 +12,7 @@ from trac.web.main import IRequestHandler
 from trac.web.api import HTTPBadRequest
 from trac.util.datefmt import format_date
 from trac.util.html import html
+from trac.util import get_reporter_id
 
 from backlog.schema import schema_version, schema
 
@@ -147,7 +148,7 @@ class BacklogPlugin(Component):
 
     # IRequestHandler methods
     def match_request(self, req):
-        match = re.match(r'/backlog(?:/(move_after|move_before))?/?',
+        match = re.match(r'/backlog(?:/(move_after|move_before|assign))?/?',
                          req.path_info)
         if match:
             return True
@@ -158,10 +159,14 @@ class BacklogPlugin(Component):
         if req.method == 'POST':
             req.perm.require('TICKET_MODIFY')
 
+            print "POST:", req.path_info
             if 'move_after' in req.path_info:
                 return self._move_after(req)
             elif 'move_before' in req.path_info:
                 return self._move_before(req)
+            elif 'assign' in req.path_info:
+                print "running assign"
+                return self._assign_milestone(req)
             else:
                 raise HTTPBadRequest("Invalid POST request")
 
@@ -325,3 +330,39 @@ class BacklogPlugin(Component):
             results.append(d)
 
         return results
+
+    def _assign_milestone(self, req):
+        ticket_id = int(req.args.get('ticket_id'))
+        milestone = req.args.get('milestone')
+        author = get_reporter_id(req, 'author')
+
+        print "ticket_id:", ticket_id, "milestone:", milestone, "author:", author
+
+        to_result = {}
+
+        ticket = None
+        try:
+            ticket = Ticket(self.env, ticket_id)
+        except:
+            to_result['msg'] = "Couldn't find ticket!"
+
+        if ticket:
+            try:
+                ticket['milestone'] = milestone
+                ticket.save_changes(author,
+                                    "Assigned into milestone %s" % milestone)
+                pass
+            except:
+                to_result['msg'] = "Unable to assign milestone"
+
+        data = simplejson.dumps(to_result)
+
+        if 'msg' in to_result:
+            print "error:", to_result['msg']
+            req.send_response(202)
+        else:
+            req.send_response(200)
+
+        req.send_header('Content-Type', 'application/json')
+        req.end_headers()
+        req.write(data)
