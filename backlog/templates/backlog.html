@@ -2,90 +2,145 @@
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:py="http://genshi.edgewall.org/"
-      xmlns:xi="http://www.w3.org/2001/XInclude">
-  <xi:include href="layout.html" />
-  <head>
+    xmlns:py="http://genshi.edgewall.org/"
+    xmlns:xi="http://www.w3.org/2001/XInclude">
+<xi:include href="layout.html" />
+<head>
     <title>$title</title>
-  </head>
+    <script type="text/javascript" src="/test/chrome/backlog/js/dojo/dojo.js" djConfig="parseOnLoad: true"/>
+    <script type="text/javascript" src="/test/chrome/backlog/js/dojo/dnd/Container.js" />
+    <script type="text/javascript" src="/test/chrome/backlog/js/dojo/dnd/Selector.js" />
+    <script type="text/javascript" src="/test/chrome/backlog/js/dojo/dnd/Source.js" />
+    <script type="text/javascript">
+        dojo.require("dojo.parser");
+        dojo.require("dojo.dnd.Source");
 
-  <body>
-    <div id="content" class="report">
+        function init() {
+            var tickets = new dojo.dnd.Source("tickets", {singular: true});
 
-      <h1>Backlog</h1>
-
-      <div>
-        <div style="width:80%; float: left;">
-          <table class="listing tickets">
-            <thead>
-              <tr>
-                <th>Id</th>
-                <th>Summary</th>
-                <th>Component</th>
-                <th>Version</th>
-                <th>Milestone</th>
-                <th>Type</th>
-                <th>Owner</th>
-                <th>Status</th>
-                <th>Created</th>
-              </tr>
-            </thead>
-            <tbody id="tickets">
-              <tr py:for="ticket in tickets" id="ticket_${ticket.id}">
-                  <td><a href="./ticket/${ticket.id}">#$ticket.id</a></td>
-                  <td><a href="./ticket/${ticket.id}">$ticket.summary</a></td>
-                  <td>$ticket.component</td>
-                  <td>$ticket.version</td>
-                  <td>$ticket.milestone</td>
-                  <td>$ticket.type</td>
-                  <td>$ticket.owner</td>
-                  <td>$ticket.status</td>
-                  <td>${format_datetime(ticket.time_created)}</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <script type="text/javascript" py:if="allow_sorting">
-            function onStop(event, ui) {
-                var item = ui.item[0];
-                var nextItem = item.nextElementSibling;
-                var prevItem = item.previousElementSibling;
-
-                if (nextItem == null) {
-                    // We've been moved to the end of the list
-                    movedItemId = item.id.split("_")[1];
-                    afterItemId = prevItem.id.split("_")[1];
-
-                    $.ajax({url: "backlog/move_after",
-                            data: {ticket_id: movedItemId, after_ticket_id: afterItemId, __FORM_TOKEN: "$form_token"},
-                            dataType: "json",
-                            type: "post",
-                            success: function(returnData, status) { },
-                            error: function(errorObj, errorString) { document.write(errorObj.responseText);},
-                            });
-                } else {
-                    // We've been moved anywhere else
-                    movedItemId = item.id.split("_")[1];
-                    beforeItemId = nextItem.id.split("_")[1];
-
-                    $.ajax({url: "backlog/move_before",
-                            data: {ticket_id: movedItemId, before_ticket_id: beforeItemId, __FORM_TOKEN: "$form_token"},
-                            dataType: "json",
-                            type: "post",
-                            success: function(returnData, status) { },
-                            error: function(errorObj, errorString) { alert("fail?\n" + errorString); },
-                            });
-                 }
+            function sendAjax(submitUrl, data) {
+                dojo.xhrPost({
+                    url: submitUrl,
+                    handleAs: "json",
+                    content: data,
+                    error: function(err) { alert(err); }
+                });
             }
 
-            $("#tickets").sortable({axis:'y', items:'tr', stop: onStop});
-          </script>
+            function moveAfter(movedId, afterId) {
+                var movedItemId = movedId.split("_")[1];
+                var afterItemId = afterId.split("_")[1];
+
+                var data = {ticket_id: movedItemId,
+                            after_ticket_id: afterItemId,
+                            __FORM_TOKEN: "$form_token"};
+
+                sendAjax("backlog/move_after", data);
+            }
+
+            function moveBefore(movedId, beforeId) {
+                var movedItemId = movedId.split("_")[1];
+                var beforeItemId = beforeId.split("_")[1];
+
+                var data = {ticket_id: movedItemId,
+                            before_ticket_id: beforeItemId,
+                            __FORM_TOKEN: "$form_token"};
+
+                sendAjax("backlog/move_before", data);
+            }
+
+            function onDropLocal(nodes, copy) {
+                var node = nodes[0];
+                var prevNode = null;
+                var allNodes = this.getAllNodes();
+
+                allNodes.forEach(function(n,i) {
+                    if (n.id == node.id) {
+                        if (prevNode == null) {
+                            var nextNode = allNodes[i+1];
+                            moveBefore(node.id, nextNode.id);
+                        } else {
+                            moveAfter(node.id, prevNode.id);
+                        }
+                    }
+
+                    prevNode = n;
+               });
+            };
+
+            dojo.connect(tickets, "onDropInternal", onDropLocal);
+
+            var x;
+            <py:for each="milestone in active_milestones">
+            x = new dojo.dnd.Target("${milestone.name}");
+            dojo.connect(x, "onDropExternal", function (source, nodes, copy) {
+                var m = dojo.byId("${milestone.name}");
+                dojo.style(m, { background: "transparent" });
+                nodes.forEach(function(node, idx, arr){
+                    // Relay the milestone change back home
+                    // Remove the node from the target
+                    console.log("destroy", node);
+                    dojo.destroy(node);
+                });
+            });
+
+            dojo.connect(x, "onDraggingOver", function () {
+                var m = dojo.byId("${milestone.name}");
+                dojo.style(m, { background: "LightYellow" });
+            });
+
+            dojo.connect(x, "onDraggingOut", function () {
+                var m = dojo.byId("${milestone.name}");
+                dojo.style(m, { background: "transparent" });
+            });
+            </py:for>
+          }
+
+          dojo.addOnLoad(init);
+    </script>
+    </head>
+
+    <body>
+        <div id="content" class="report">
+
+    <h1>Backlog</h1>
+
+    <div id="container">
+        <div style="width:80%; float: left;">
+            <table class="listing tickets">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Summary</th>
+                        <th>Component</th>
+                        <th>Version</th>
+                        <th>Milestone</th>
+                        <th>Type</th>
+                        <th>Owner</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody id="tickets">
+                    <tr py:for="ticket in tickets" id="ticket_${ticket.id}" class="dojoDndItem">
+                        <td><a href="./ticket/${ticket.id}">#$ticket.id</a></td>
+                        <td><a href="./ticket/${ticket.id}">$ticket.summary</a></td>
+                        <td>$ticket.component</td>
+                        <td>$ticket.version</td>
+                        <td>$ticket.milestone</td>
+                        <td>$ticket.type</td>
+                        <td>$ticket.owner</td>
+                        <td>$ticket.status</td>
+                        <td>${format_datetime(ticket.time_created)}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         <div class="milestone_list">
-          <div py:for="milestone in active_milestones" class="milestone">
-            <h4>${milestone.name}</h4>
-            <p>Due: ${milestone.due}</p>
-          </div>
+            <div py:for="milestone in active_milestones" id="${milestone.name}" class="milestone">
+                <h4>${milestone.name}</h4>
+                <p>Due: ${milestone.due}</p>
+            </div>
         </div>
       </div>
     </div>

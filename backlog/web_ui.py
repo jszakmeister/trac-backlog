@@ -182,8 +182,8 @@ class BacklogPlugin(Component):
         if 'TICKET_MODIFY' in req.perm:
             data['allow_sorting'] = True
 
-        add_script(req, 'backlog/js/jquery-ui.js')
         add_stylesheet(req, 'backlog/css/backlog.css')
+
         return 'backlog.html', data, None
 
     def _get_active_tickets(self):

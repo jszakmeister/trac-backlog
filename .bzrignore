@@ -1,3 +1,4 @@
 TracBacklog.egg-info
 dist
 build
+*.wpr
