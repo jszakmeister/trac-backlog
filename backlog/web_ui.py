@@ -351,7 +351,6 @@ class BacklogPlugin(Component):
                 ticket['milestone'] = milestone
                 ticket.save_changes(author,
                                     "Assigned into milestone %s" % milestone)
-                pass
             except:
                 to_result['msg'] = "Unable to assign milestone"
 
