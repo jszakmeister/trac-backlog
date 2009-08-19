@@ -17,17 +17,11 @@ from trac.util import get_reporter_id
 from backlog.schema import schema_version, schema
 
 
-BACKLOG_QUERY = '''SELECT p.value AS __color__,
-   id AS ticket, summary, component, version, milestone, t.type AS type,
-   owner, status,
-   time AS created,
-   changetime AS _changetime, description AS _description,
-   reporter AS _reporter
-  FROM ticket t
+BACKLOG_QUERY = '''SELECT id FROM ticket t
   LEFT JOIN enum p ON p.name = t.priority AND p.type = 'priority'
   LEFT JOIN backlog bp ON bp.ticket_id = t.id
-  WHERE status <> 'closed'
-  ORDER BY bp.rank, CAST(p.value AS int), milestone, t.type, time
+  WHERE status <> 'closed' AND milestone = %s
+  ORDER BY bp.rank, CAST(p.value AS int), t.type, time
 '''
 
 MILESTONE_QUERY = '''SELECT name, due FROM milestone
@@ -148,7 +142,7 @@ class BacklogPlugin(Component):
 
     # IRequestHandler methods
     def match_request(self, req):
-        match = re.match(r'/backlog(?:/(move_after|move_before|assign))?/?',
+        match = re.match(r'/backlog(?:/(move_after|move_before|assign|milestone/(?:[^/]+)))?/?',
                          req.path_info)
         if match:
             return True
@@ -159,28 +153,35 @@ class BacklogPlugin(Component):
         if req.method == 'POST':
             req.perm.require('TICKET_MODIFY')
 
-            print "POST:", req.path_info
             if 'move_after' in req.path_info:
                 return self._move_after(req)
             elif 'move_before' in req.path_info:
                 return self._move_before(req)
             elif 'assign' in req.path_info:
-                print "running assign"
                 return self._assign_milestone(req)
             else:
                 raise HTTPBadRequest("Invalid POST request")
 
+        if req.path_info.startswith('/backlog/milestone/'):
+            milestone = req.path_info[19:]
+        else:
+            milestone = None
+
+        if milestone == '(unscheduled)':
+            milestone = None
+
         data = {
-            'title': 'Backlog',
+            'title': (milestone or "Unscheduled") + ' - Backlog',
         }
 
         class Report(object):
             def __init__(self):
                 self.id = -1
 
-        data['tickets'] = self._get_active_tickets()
+        data['tickets'] = self._get_active_tickets(milestone)
         data['form_token'] = req.form_token
-        data['active_milestones'] = self._get_active_milestones()
+        data['active_milestones'] = self._get_active_milestones(milestone)
+        data['base_path'] = req.base_path
 
         if 'TICKET_MODIFY' in req.perm:
             data['allow_sorting'] = True
@@ -189,12 +190,15 @@ class BacklogPlugin(Component):
 
         return 'backlog.html', data, None
 
-    def _get_active_tickets(self):
+    def _get_active_tickets(self, milestone = None):
+        if milestone == None:
+            milestone = "";
+
         db = self.env.get_db_cnx()
         cursor = db.cursor()
 
         try:
-            cursor.execute(BACKLOG_QUERY)
+            cursor.execute(BACKLOG_QUERY, (milestone,))
         except:
             db.rollback()
             raise
@@ -202,7 +206,7 @@ class BacklogPlugin(Component):
         tickets = []
 
         for row in cursor:
-            t = Ticket(self.env, row[1])
+            t = Ticket(self.env, row[0])
             tickets.append(t)
 
         return tickets
@@ -265,9 +269,6 @@ class BacklogPlugin(Component):
         ticket_id = int(req.args.get('ticket_id'))
         after_ticket_id = int(req.args.get('after_ticket_id'))
 
-        ticket = Ticket(self.env, ticket_id)
-        other = Ticket(self.env, after_ticket_id)
-
         to_result = {}
 
         db = self.env.get_db_cnx()
@@ -289,8 +290,8 @@ class BacklogPlugin(Component):
                     (old_rank, new_rank))
             elif old_rank >= new_rank:
                 cursor.execute(
-                    'UPDATE backlog SET rank = rank - 1 WHERE rank > %s AND rank <= %s',
-                    (old_rank, new_rank))
+                    'UPDATE backlog SET rank = rank + 1 WHERE rank > %s AND rank <= %s',
+                    (new_rank, old_rank))
                 new_rank += 1
 
             cursor.execute(
@@ -303,6 +304,8 @@ class BacklogPlugin(Component):
             to_result['msg'] = 'Error trying to update rank'
             raise
 
+        self._get_active_tickets()
+
         data = simplejson.dumps(to_result)
 
         if 'msg' in to_result:
@@ -314,7 +317,10 @@ class BacklogPlugin(Component):
         req.end_headers()
         req.write(data)
 
-    def _get_active_milestones(self):
+    def _get_active_milestones(self, exclude = None):
+        '''Retrieve a list of milestones.  If exclude is specified, it
+        will exclude that milestone from the list and add in the unscheduled
+        milestone.'''
         db = self.env.get_db_cnx()
 
         cursor = db.cursor()
@@ -324,7 +330,15 @@ class BacklogPlugin(Component):
         rows = cursor.fetchall()
 
         results = []
+
+        if exclude:
+            results.append(
+                dict(name='(unscheduled)', due='--'))
+
         for row in rows:
+            if exclude and exclude == row[0]:
+                continue
+
             d = dict(name=row[0],
                      due=(row[1] and format_date(row[1])) or '--')
             results.append(d)
@@ -336,7 +350,8 @@ class BacklogPlugin(Component):
         milestone = req.args.get('milestone')
         author = get_reporter_id(req, 'author')
 
-        print "ticket_id:", ticket_id, "milestone:", milestone, "author:", author
+        if milestone == '(unscheduled)':
+            milestone = ''
 
         to_result = {}
 
@@ -349,8 +364,7 @@ class BacklogPlugin(Component):
         if ticket:
             try:
                 ticket['milestone'] = milestone
-                ticket.save_changes(author,
-                                    "Assigned into milestone %s" % milestone)
+                ticket.save_changes(author, "");
             except:
                 to_result['msg'] = "Unable to assign milestone"
 

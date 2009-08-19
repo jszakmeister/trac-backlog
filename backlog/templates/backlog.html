@@ -35,7 +35,7 @@
                             after_ticket_id: afterItemId,
                             __FORM_TOKEN: "$form_token"};
 
-                sendAjax("backlog/move_after", data);
+                sendAjax("${base_path}/backlog/move_after", data);
             }
 
             function moveBefore(movedId, beforeId) {
@@ -46,7 +46,7 @@
                             before_ticket_id: beforeItemId,
                             __FORM_TOKEN: "$form_token"};
 
-                sendAjax("backlog/move_before", data);
+                sendAjax("${base_path}/backlog/move_before", data);
             }
 
             function assignMilestone(ticketId, milestoneId) {
@@ -56,7 +56,7 @@
                             milestone: milestoneId,
                             __FORM_TOKEN: "$form_token"};
 
-                sendAjax("backlog/assign", data);
+                sendAjax("${base_path}/backlog/assign", data);
             }
 
             function onDropLocal(nodes, copy) {
@@ -126,7 +126,6 @@
                         <th>Summary</th>
                         <th>Component</th>
                         <th>Version</th>
-                        <th>Milestone</th>
                         <th>Type</th>
                         <th>Owner</th>
                         <th>Status</th>
@@ -139,7 +138,6 @@
                         <td><a href="./ticket/${ticket.id}">$ticket.summary</a></td>
                         <td>$ticket.component</td>
                         <td>$ticket.version</td>
-                        <td>$ticket.milestone</td>
                         <td>$ticket.type</td>
                         <td>$ticket.owner</td>
                         <td>$ticket.status</td>
@@ -150,7 +148,8 @@
         </div>
         <div class="milestone_list">
             <div py:for="milestone in active_milestones" id="${milestone.name}" class="milestone">
-                <h4>${milestone.name}</h4>
+                <h4><a href="${base_path}/backlog" py:if="milestone.name == '(unscheduled)'">${milestone.name}</a>
+                    <a href="${base_path}/backlog/milestone/${milestone.name}" py:if="milestone.name != '(unscheduled)'">${milestone.name}</a></h4>
                 <p>Due: ${milestone.due}</p>
             </div>
         </div>
