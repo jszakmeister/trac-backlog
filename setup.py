@@ -17,8 +17,8 @@ setup(name=PACKAGE,
             'templates/*.html',
             'scripts/*'
         ]},
-      entry_points='''
-          [trac.plugins]
-          backlog = backlog.web_ui
-      ''')
+      entry_points={
+        'trac.plugins': ['backlog = backlog.web_ui']
+        }
+      )
 
