@@ -59,7 +59,6 @@ class BacklogPlugin(Component):
                         str(schema_version)))
 
     def environment_needs_upgrade(self, db):
-        print "Needs upgrade called!"
         cur = db.cursor()
         cur.execute("SELECT value FROM system WHERE name='backlog_schema_version'")
         row = cur.fetchone()
@@ -85,7 +84,6 @@ class BacklogPlugin(Component):
         return False
 
     def upgrade_environment(self, db):
-        print "Upgrade called"
         cur = db.cursor()
         cur.execute("SELECT value FROM system WHERE name='backlog_schema_version'")
         row = cur.fetchone()
@@ -319,8 +317,6 @@ class BacklogPlugin(Component):
         cursor.execute(MILESTONE_QUERY)
 
         rows = cursor.fetchall()
-
-        print "Got %d rows" % len(rows)
 
         results = []
         for row in rows:
