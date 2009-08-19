@@ -96,7 +96,6 @@ class BacklogPlugin(Component):
 
         for row in cur.fetchall():
             ticket_id = row[0]
-            print ticket_id
 
             # Insert a default rank for the ticket, using the ticket id
             cur.execute("INSERT INTO backlog VALUES (%s,%s)",
