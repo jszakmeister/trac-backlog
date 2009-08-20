@@ -14,6 +14,7 @@ setup(name=PACKAGE,
             'htdocs/js/dojo/*.js',
             'htdocs/js/dojo/dnd/*.js',
             'htdocs/js/dojo/date/*.js',
+            'htdocs/js/dojo/fx/*.js',
             'templates/*.html',
             'scripts/*'
         ]},

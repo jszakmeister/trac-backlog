@@ -14,20 +14,50 @@
     <script type="text/javascript">
         dojo.require("dojo.parser");
         dojo.require("dojo.dnd.Source");
+        dojo.require("dojo.NodeList-fx");
 
         function init() {
             var tickets = new dojo.dnd.Source("tickets", {singular: true});
 
-            function sendAjax(submitUrl, data) {
+            function highlightTarget(target, succeeded) {
+                if (succeeded) {
+                    target.anim({
+                            backgroundColor: {
+                                start: "#90EE90",
+                                end: "transparent"
+                            }
+                        },
+                        500).play();
+                } else {
+                    target.anim({
+                            backgroundColor: {
+                                start: "#CD5C5C",
+                                end: "transparent"
+                            }
+                        },
+                        500).play();
+                    window.location.reload(true);
+                }
+            }
+
+            function sendAjax(submitUrl, target, data) {
+                target.style("cursor", "wait");
                 dojo.xhrPost({
                     url: submitUrl,
                     handleAs: "json",
                     content: data,
-                    error: function(err) { alert(err); }
+                    load: function(returnedData) {
+                        highlightTarget(target, true);
+                        target.style("cursor", "default");
+                    },
+                    error: function(err) {
+                        highlightTarget(target, false);
+                        target.style("cursor", "default");
+                    },
                 });
             }
 
-            function moveAfter(movedId, afterId) {
+            function moveAfter(target, movedId, afterId) {
                 var movedItemId = movedId.split("_")[1];
                 var afterItemId = afterId.split("_")[1];
 
@@ -35,10 +65,10 @@
                             after_ticket_id: afterItemId,
                             __FORM_TOKEN: "$form_token"};
 
-                sendAjax("${base_path}/backlog/move_after", data);
+                sendAjax("${base_path}/backlog/move_after", target, data);
             }
 
-            function moveBefore(movedId, beforeId) {
+            function moveBefore(target, movedId, beforeId) {
                 var movedItemId = movedId.split("_")[1];
                 var beforeItemId = beforeId.split("_")[1];
 
@@ -46,31 +76,32 @@
                             before_ticket_id: beforeItemId,
                             __FORM_TOKEN: "$form_token"};
 
-                sendAjax("${base_path}/backlog/move_before", data);
+                sendAjax("${base_path}/backlog/move_before", target, data);
             }
 
-            function assignMilestone(ticketId, milestoneId) {
+            function assignMilestone(target, ticketId, milestoneId) {
                 var ticket = ticketId.split("_")[1];
 
                 var data = { ticket_id: ticket,
                             milestone: milestoneId,
                             __FORM_TOKEN: "$form_token"};
 
-                sendAjax("${base_path}/backlog/assign", data);
+                sendAjax("${base_path}/backlog/assign", target, data);
             }
 
             function onDropLocal(nodes, copy) {
                 var node = nodes[0];
                 var prevNode = null;
                 var allNodes = this.getAllNodes();
+                var target = dojo.query("#tickets_table");
 
                 allNodes.forEach(function(n,i) {
                     if (n.id == node.id) {
                         if (prevNode == null) {
                             var nextNode = allNodes[i+1];
-                            moveBefore(node.id, nextNode.id);
+                            moveBefore(target, node.id, nextNode.id);
                         } else {
-                            moveAfter(node.id, prevNode.id);
+                            moveAfter(target, node.id, prevNode.id);
                         }
                     }
 
@@ -84,26 +115,25 @@
             <py:for each="milestone in active_milestones">
             x = new dojo.dnd.Target("${milestone.name}");
             dojo.connect(x, "onDropExternal", function (source, nodes, copy) {
-                var m = dojo.byId("${milestone.name}");
-                dojo.style(m, { background: "transparent" });
+                var m = dojo.query("#${milestone.name}");
+                m.style({ background: "transparent" });
                 nodes.forEach(function(node, idx, arr){
                     // Relay the milestone change back home
-                    assignMilestone(node.id, "${milestone.name}");
+                    assignMilestone(m, node.id, "${milestone.name}");
 
                     // Remove the node from the target
-                    console.log("destroy", node);
                     dojo.destroy(node);
                 });
             });
 
             dojo.connect(x, "onDraggingOver", function () {
-                var m = dojo.byId("${milestone.name}");
-                dojo.style(m, { background: "LightYellow" });
+                var m = dojo.query("#${milestone.name}");
+                m.style({ background: "LightYellow" });
             });
 
             dojo.connect(x, "onDraggingOut", function () {
-                var m = dojo.byId("${milestone.name}");
-                dojo.style(m, { background: "transparent" });
+                var m = dojo.query("#${milestone.name}");
+                m.style({ background: "transparent" });
             });
             </py:for>
           }
@@ -119,7 +149,7 @@
 
     <div id="container">
         <div style="width:80%; float: left;">
-            <table class="listing tickets">
+            <table id="tickets_table" class="listing tickets">
                 <thead>
                     <tr>
                         <th>Id</th>
