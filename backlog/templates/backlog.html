@@ -47,12 +47,12 @@
                     handleAs: "json",
                     content: data,
                     load: function(returnedData) {
-                        highlightTarget(target, true);
                         target.style("cursor", "default");
+                        highlightTarget(target, true);
                     },
                     error: function(err) {
-                        highlightTarget(target, false);
                         target.style("cursor", "default");
+                        highlightTarget(target, false);
                     },
                 });
             }
