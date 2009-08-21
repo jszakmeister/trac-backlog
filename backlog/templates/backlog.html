@@ -115,7 +115,7 @@
             <py:for each="milestone in active_milestones">
             x = new dojo.dnd.Target("${milestone.name}");
             dojo.connect(x, "onDropExternal", function (source, nodes, copy) {
-                var m = dojo.query("#${milestone.name}");
+                var m = new dojo.NodeList(dojo.byId("${milestone.name}"));
                 m.style({ background: "transparent" });
                 nodes.forEach(function(node, idx, arr){
                     // Relay the milestone change back home
@@ -127,12 +127,12 @@
             });
 
             dojo.connect(x, "onDraggingOver", function () {
-                var m = dojo.query("#${milestone.name}");
+                var m = new dojo.NodeList(dojo.byId("${milestone.name}"));
                 m.style({ background: "LightYellow" });
             });
 
             dojo.connect(x, "onDraggingOut", function () {
-                var m = dojo.query("#${milestone.name}");
+                var m = new dojo.NodeList(dojo.byId("${milestone.name}"));
                 m.style({ background: "transparent" });
             });
             </py:for>
