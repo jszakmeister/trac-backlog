@@ -26,7 +26,7 @@ BACKLOG_QUERY = '''SELECT id FROM ticket t
 
 MILESTONE_QUERY = '''SELECT name, due FROM milestone
   WHERE completed == 0
-  ORDER BY (due == 0), due, name
+  ORDER BY (due == 0), due, UPPER(name), name
 '''
 
 
