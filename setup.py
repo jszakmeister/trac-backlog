@@ -1,10 +1,10 @@
 from setuptools import setup
+import backlog
 
 PACKAGE = 'TracBacklog'
-VERSION = '0.1'
 
 setup(name=PACKAGE,
-      version=VERSION,
+      version=backlog.get_version(),
       packages=['backlog'],
       package_data={
         'backlog': [
