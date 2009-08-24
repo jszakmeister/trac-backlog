@@ -1,4 +1,4 @@
-TracBacklog 0.1 (???)
+TracBacklog 0.1 (August 24, 2009)
 
 First release!
 
