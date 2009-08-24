@@ -20,6 +20,9 @@ setup(name=PACKAGE,
         ]},
       entry_points={
         'trac.plugins': ['backlog = backlog.web_ui']
-        }
+        },
+      install_requires=[
+        'simplejson>=2.0',
+        ]
       )
 
