@@ -23,6 +23,17 @@ setup(name=PACKAGE,
         },
       install_requires=[
         'simplejson>=2.0',
-        ]
+        ],
+      author="John Szakmeister",
+      author_email="john@szakmeister.net",
+      description="Enables Trac to be used for managing your ticket backlog.",
+      long_description='''
+Provides ticket backlog management in Trac.  It allows users to use
+drag-and-drop in their web browser to reorder tickets, and to assign tickets
+to a milestone.
+''',
+      url="https://launchpad.net/trac-backlog",
+      download_url="https://launchpad.net/trac-backlog/+download",
+      license="Simplified BSD",
       )
 
