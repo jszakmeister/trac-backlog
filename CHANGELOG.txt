@@ -1,3 +1,7 @@
+TracBacklog 0.1.1? (August ?, 2009)
+
+ * Fix the backlog page titles to reflect the milestone you're viewing. 
+
 TracBacklog 0.1 (August 24, 2009)
 
 First release!
