@@ -176,7 +176,7 @@ class BacklogPlugin(Component):
             milestone = None
 
         data = {
-            'title': (milestone or "Unscheduled") + ' - Backlog',
+            'title': (milestone or "Unscheduled"),
         }
 
         class Report(object):
