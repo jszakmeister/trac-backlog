@@ -1,4 +1,4 @@
-__version__ = (0, 2, 0, 'dev', 0)
+__version__ = (0, 3, 0, 'dev', 0)
 
 def get_version():
    version = '%d.%d.%d' % __version__[0:3]
