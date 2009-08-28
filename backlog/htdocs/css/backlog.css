@@ -20,6 +20,10 @@
     padding: 0;
 }
 
+.milestone table {
+    padding: 0 4px;
+}
+
 .milestone td {
     font-size: 11px;
     color: #555;
