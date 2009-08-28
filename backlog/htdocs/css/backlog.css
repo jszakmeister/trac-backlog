@@ -20,7 +20,7 @@
     padding: 0;
 }
 
-.milestone p {
-    margin: 0;
-    padding: 8px;
+.milestone td {
+    font-size: 11px;
+    color: #555;
 }

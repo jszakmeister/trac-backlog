@@ -15,7 +15,7 @@ from trac.ticket.model import Ticket
 from trac.web.chrome import INavigationContributor, ITemplateProvider
 from trac.web.chrome import add_script, add_stylesheet
 from trac.web.main import IRequestHandler
-from trac.web.api import HTTPBadRequest
+from trac.web.api import HTTPBadRequest, RequestDone
 from trac.util.datefmt import format_date
 from trac.util.html import html
 from trac.util import get_reporter_id
@@ -322,6 +322,11 @@ class BacklogPlugin(Component):
         req.end_headers()
         req.write(data)
 
+    def _get_num_tickets(self, cursor, milestone):
+        cursor.execute("SELECT COUNT(*) FROM ticket WHERE status <> 'closed' AND milestone = %s",
+                       (milestone,));
+        return cursor.fetchone()[0]
+
     def _get_active_milestones(self, exclude = None):
         '''Retrieve a list of milestones.  If exclude is specified, it
         will exclude that milestone from the list and add in the unscheduled
@@ -330,22 +335,26 @@ class BacklogPlugin(Component):
 
         cursor = db.cursor()
 
-        cursor.execute(MILESTONE_QUERY)
-
-        rows = cursor.fetchall()
-
         results = []
 
         if exclude:
+            num_tickets = self._get_num_tickets(cursor, '')
             results.append(
-                dict(name='(unscheduled)', due='--'))
+                dict(name='(unscheduled)', due='--', num_tickets=num_tickets))
+
+        cursor.execute(MILESTONE_QUERY)
+
+        rows = cursor.fetchall()
 
         for row in rows:
             if exclude and exclude == row[0]:
                 continue
 
+            num_tickets = self._get_num_tickets(cursor, row[0])
+
             d = dict(name=row[0],
-                     due=(row[1] and format_date(row[1])) or '--')
+                     due=(row[1] and format_date(row[1])) or '--',
+                     num_tickets=num_tickets)
             results.append(d)
 
         return results
@@ -367,9 +376,15 @@ class BacklogPlugin(Component):
             to_result['msg'] = "Couldn't find ticket!"
 
         if ticket:
+            db = self.env.get_db_cnx()
+
+            cursor = db.cursor()
+
             try:
                 ticket['milestone'] = milestone
                 ticket.save_changes(author, "");
+
+                to_result['num_tickets'] = self._get_num_tickets(cursor, milestone)
             except:
                 to_result['msg'] = "Unable to assign milestone"
 
@@ -384,3 +399,5 @@ class BacklogPlugin(Component):
         req.send_header('Content-Type', 'application/json')
         req.end_headers()
         req.write(data)
+        #raise RequestDone
+

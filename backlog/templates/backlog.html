@@ -16,6 +16,12 @@
         dojo.require("dojo.dnd.Source");
         dojo.require("dojo.NodeList-fx");
 
+        <?python
+            import re
+            def milestone_id(milestone_name):
+                return milestone_name.replace('_', '__').replace(' ', '_')
+        ?>
+
         function init() {
             var tickets = new dojo.dnd.Source("tickets", {singular: true});
 
@@ -49,12 +55,19 @@
                     load: function(returnedData) {
                         target.style("cursor", "default");
                         highlightTarget(target, true);
+                
+                        var e = target.query(".num_tickets");
+                        if (e.length) {
+                            // We dropped a ticket on a milestone, update the count
+                            e = e[0];
+                            e.innerHTML = new String(returnedData.num_tickets);
+                        }
                     },
                     error: function(err) {
                         target.style("cursor", "default");
                         highlightTarget(target, false);
                     },
-                    timeout: 1000,
+                    timeout: 5000,
                 });
             }
 
@@ -80,12 +93,12 @@
                 sendAjax("${base_path}/backlog/move_before", target, data);
             }
 
-            function assignMilestone(target, ticketId, milestoneId) {
+            function assignMilestone(target, ticketId, milestoneName, milestoneId) {
                 var ticket = ticketId.split("_")[1];
 
                 var data = { ticket_id: ticket,
-                            milestone: milestoneId,
-                            __FORM_TOKEN: "$form_token"};
+                             milestone: milestoneName,
+                             __FORM_TOKEN: "$form_token"};
 
                 sendAjax("${base_path}/backlog/assign", target, data);
             }
@@ -114,13 +127,13 @@
 
             var x;
             <py:for each="milestone in active_milestones">
-            x = new dojo.dnd.Target("${milestone.name}");
+            x = new dojo.dnd.Target("${milestone_id(milestone.name)}");
             dojo.connect(x, "onDropExternal", function (source, nodes, copy) {
-                var m = new dojo.NodeList(dojo.byId("${milestone.name}"));
+                var m = new dojo.NodeList(dojo.byId("${milestone_id(milestone.name)}"));
                 m.style({ background: "transparent" });
                 nodes.forEach(function(node, idx, arr){
                     // Relay the milestone change back home
-                    assignMilestone(m, node.id, "${milestone.name}");
+                    assignMilestone(m, node.id, "${milestone.name}", "${milestone_id(milestone.name)}");
 
                     // Remove the node from the target
                     dojo.destroy(node);
@@ -128,14 +141,15 @@
             });
 
             dojo.connect(x, "onDraggingOver", function () {
-                var m = new dojo.NodeList(dojo.byId("${milestone.name}"));
+                var m = new dojo.NodeList(dojo.byId("${milestone_id(milestone.name)}"));
                 m.style({ background: "LightYellow" });
             });
 
             dojo.connect(x, "onDraggingOut", function () {
-                var m = new dojo.NodeList(dojo.byId("${milestone.name}"));
+                var m = new dojo.NodeList(dojo.byId("${milestone_id(milestone.name)}"));
                 m.style({ background: "transparent" });
             });
+
             </py:for>
           }
 
@@ -178,10 +192,13 @@
             </table>
         </div>
         <div class="milestone_list">
-            <div py:for="milestone in active_milestones" id="${milestone.name}" class="milestone">
+            <div py:for="milestone in active_milestones" id="${milestone_id(milestone.name)}" class="milestone">
                 <h4><a href="${base_path}/backlog" py:if="milestone.name == '(unscheduled)'">${milestone.name}</a>
                     <a href="${base_path}/backlog/milestone/${milestone.name}" py:if="milestone.name != '(unscheduled)'">${milestone.name}</a></h4>
-                <p>Due: ${milestone.due}</p>
+                <table>
+                  <tr><td>Due:</td><td>${milestone.due}</td></tr>
+                  <tr><td>Tickets:</td><td class="num_tickets">${milestone.num_tickets}</td></tr>
+                </table>
             </div>
         </div>
       </div>
