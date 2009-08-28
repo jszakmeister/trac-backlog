@@ -1,4 +1,4 @@
-In Development
+TracBacklog 0.2.0 (August 28, 2009)
 
  * Added ticket counts on the milestone targets.
 
