@@ -179,8 +179,8 @@
                 </thead>
                 <tbody id="tickets">
                     <tr py:for="ticket in tickets" id="ticket_${ticket.id}" class="dojoDndItem">
-                        <td><a href="./ticket/${ticket.id}">#$ticket.id</a></td>
-                        <td><a href="./ticket/${ticket.id}">$ticket.summary</a></td>
+                        <td><a href="${base_path}/ticket/${ticket.id}">#$ticket.id</a></td>
+                        <td><a href="${base_path}/ticket/${ticket.id}">$ticket.summary</a></td>
                         <td>$ticket.component</td>
                         <td>$ticket.version</td>
                         <td>$ticket.type</td>

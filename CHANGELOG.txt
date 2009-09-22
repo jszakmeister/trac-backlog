@@ -1,5 +1,7 @@
 In Development
 
+ * Fixed ticket links when viewing the backlog for a specific milestone.
+
 TracBacklog 0.2.0 (August 28, 2009)
 
  * Added ticket counts on the milestone targets.
