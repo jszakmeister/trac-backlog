@@ -23,7 +23,9 @@ backlog for it, but all tickets are ranked absolutely (they maintain their
 absolute ranking when you drag them in and out of a milestone).  Furthermore,
 if you are trying this on an existing project, the initial rank for each
 ticket will be it's ticket id.  You'll want to spend some time sorting your
-tickets.
+tickets, and you may want to consider pulling them all into the unscheduled
+backlog when you do that (so that you can order the all the tickets against
+each other).
 
 Bugs
 ====
