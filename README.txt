@@ -17,6 +17,13 @@ tickets), you drag-n-drop tickets onto a milestone to assign it into the
 milestone.  This effectively treats milestones as sprints, which works well
 for us... and I hope it works well for you!
 
+The unscheduled backlog is created from tickets that are not assigned
+to any milestone.  You can also view each milestone and see and individual
+backlog for it, but all tickets are ranked absolutely (they maintain their
+absolute ranking when you drag them in and out of a milestone).  Furthermore,
+if you are trying this on an existing project, the initial rank for each
+ticket will be it's ticket id.  You'll want to spend some time sorting your
+tickets.
 
 Bugs
 ====
