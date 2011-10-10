@@ -32,13 +32,13 @@ Bugs
 
 There are no known bugs at this time.  If you do find some, please report
 them to:
-   <https://bugs.launchpad.net/trac-backlog>
+   <https://github.com/jszakmeister/trac-backlog/issues>
 
 
 Main Website
 ============
 
-This project is hosted in Launchpad.  You can find more about the project
-at:
-   <https://launchpad.net/trac-backlog>
+This project was previously hosted on Launchpad.  It has since moved to
+GitHub.  You can find more about the project at:
+   <https://github.com/jszakmeister/trac-backlog>
 
