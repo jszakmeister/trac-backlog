@@ -1,5 +1,10 @@
 In Development
 
+TracBacklog 0.2.2 (October 10, 2011)
+
+ * Fixed a bug where tickets were missing in the unscheduled view after a
+   milestone was deleted (and the tickets were re-target to None).
+
 TracBacklog 0.2.1 (September 22, 2009)
 
  * Fixed ticket links when viewing the backlog for a specific milestone.
