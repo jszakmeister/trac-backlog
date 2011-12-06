@@ -167,26 +167,26 @@
             <table id="tickets_table" class="listing tickets">
                 <thead>
                     <tr>
-                        <th>Id</th>
-                        <th>Summary</th>
-                        <th>Component</th>
-                        <th>Version</th>
-                        <th>Type</th>
-                        <th>Owner</th>
-                        <th>Status</th>
-                        <th>Created</th>
+                        <th py:if="'id' in shown_fields">Id</th>
+                        <th py:if="'summary' in shown_fields">Summary</th>
+                        <th py:if="'component' in shown_fields">Component</th>
+                        <th py:if="'version' in shown_fields">Version</th>
+                        <th py:if="'type' in shown_fields">Type</th>
+                        <th py:if="'owner' in shown_fields">Owner</th>
+                        <th py:if="'status' in shown_fields">Status</th>
+                        <th py:if="'time_created' in shown_fields">Created</th>
                     </tr>
                 </thead>
                 <tbody id="tickets">
                     <tr py:for="ticket in tickets" id="ticket_${ticket.id}" class="dojoDndItem">
-                        <td><a href="${base_path}/ticket/${ticket.id}">#$ticket.id</a></td>
-                        <td><a href="${base_path}/ticket/${ticket.id}">$ticket.summary</a></td>
-                        <td>$ticket.component</td>
-                        <td>$ticket.version</td>
-                        <td>$ticket.type</td>
-                        <td>$ticket.owner</td>
-                        <td>$ticket.status</td>
-                        <td>${format_datetime(ticket.time_created)}</td>
+                        <td py:if="'id' in shown_fields"><a href="${base_path}/ticket/${ticket.id}">#$ticket.id</a></td>
+                        <td py:if="'summary' in shown_fields"><a href="${base_path}/ticket/${ticket.id}">$ticket.summary</a></td>
+                        <td py:if="'component' in shown_fields">$ticket.component</td>
+                        <td py:if="'version' in shown_fields">$ticket.version</td>
+                        <td py:if="'type' in shown_fields">$ticket.type</td>
+                        <td py:if="'owner' in shown_fields">$ticket.owner</td>
+                        <td py:if="'status' in shown_fields">$ticket.status</td>
+                        <td py:if="'time_created' in shown_fields">${format_date(ticket.time_created)}</td>
                     </tr>
                 </tbody>
             </table>

@@ -1,0 +1,45 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:py="http://genshi.edgewall.org/"
+    xmlns:xi="http://www.w3.org/2001/XInclude">
+<xi:include href="prefs.html" />
+    <head>
+        <title>Backlog</title>
+        <style type="text/css">
+            label {
+                padding-right: .5em;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="field">
+            <label>Shown Ticket Fields:</label>
+            <label>
+                <input type="checkbox" name="backlog_fields" value="id" checked="${'id' in shown_fields or None}" />Id
+            </label>
+            <label>
+                <input type="checkbox" name="backlog_fields" value="summary" checked="${'summary' in shown_fields or None}" />Summary
+            </label>
+            <label>
+                <input type="checkbox" name="backlog_fields" value="component" checked="${'component' in shown_fields or None}" />Component
+            </label>
+            <label>
+                <input type="checkbox" name="backlog_fields" value="version" checked="${'version' in shown_fields or None}" />Version
+            </label>
+            <label>
+                <input type="checkbox" name="backlog_fields" value="type" checked="${'type' in shown_fields or None}" />Type
+            </label>
+            <label>
+                <input type="checkbox" name="backlog_fields" value="owner" checked="${'owner' in shown_fields or None}" />Owner
+            </label>
+            <label>
+                <input type="checkbox" name="backlog_fields" value="status" checked="${'status' in shown_fields or None}" />Status
+            </label>
+            <label>
+                <input type="checkbox" name="backlog_fields" value="time_created" checked="${'time_created' in shown_fields or None}" />Created
+            </label>
+        </div>
+    </body>
+</html>

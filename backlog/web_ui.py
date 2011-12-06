@@ -53,6 +53,11 @@ class BacklogPlugin(Component):
                IEnvironmentSetupParticipant, ITemplateProvider,
                ITicketChangeListener, IPermissionRequestor)
 
+    _ticket_fields = [ 
+        'id', 'summary', 'component', 'version', 'type', 'owner', 'status', 
+        'time_created'
+    ]
+
     # IEnvironmentSetupParticipant
     def environment_created(self):
         connector, args = DatabaseManager(self.env)._get_connector()
@@ -203,6 +208,7 @@ class BacklogPlugin(Component):
         data['form_token'] = req.form_token
         data['active_milestones'] = self._get_active_milestones(milestone)
         data['base_path'] = req.base_path
+        data['shown_fields'] = req.session.get('backlog_fields') or self._ticket_fields
 
         if mod_perms <= req.perm:
             data['allow_sorting'] = True
