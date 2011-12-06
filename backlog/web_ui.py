@@ -10,6 +10,7 @@ import simplejson
 from trac.core import *
 from trac.db import DatabaseManager
 from trac.env import IEnvironmentSetupParticipant
+from trac.perm import IPermissionRequestor
 from trac.ticket.api import ITicketChangeListener
 from trac.ticket.model import Ticket
 from trac.web.chrome import INavigationContributor, ITemplateProvider
@@ -50,7 +51,7 @@ MILESTONE_QUERY = '''SELECT name, due FROM milestone
 class BacklogPlugin(Component):
     implements(INavigationContributor, IRequestHandler,
                IEnvironmentSetupParticipant, ITemplateProvider,
-               ITicketChangeListener)
+               ITicketChangeListener, IPermissionRequestor)
 
     # IEnvironmentSetupParticipant
     def environment_created(self):
@@ -120,6 +121,9 @@ class BacklogPlugin(Component):
         db.commit()
 
     # INavigationContributor methods
+    def get_permission_actions(self):
+        return ['BACKLOG_ADMIN']
+
     def get_active_navigation_item(self, req):
         return 'backlog'
 
@@ -164,9 +168,11 @@ class BacklogPlugin(Component):
         return False
 
     def process_request(self, req):
+        mod_perms = ['TICKET_MODIFY','BACKLOG_ADMIN']
         req.perm.require('TICKET_VIEW')
         if req.method == 'POST':
-            req.perm.require('TICKET_MODIFY')
+            for perm in mod_perms:
+                req.perm.require(perm)
 
             if 'move_after' in req.path_info:
                 return self._move_after(req)
@@ -198,7 +204,7 @@ class BacklogPlugin(Component):
         data['active_milestones'] = self._get_active_milestones(milestone)
         data['base_path'] = req.base_path
 
-        if 'TICKET_MODIFY' in req.perm:
+        if mod_perms <= req.perm:
             data['allow_sorting'] = True
 
         add_stylesheet(req, 'backlog/css/backlog.css')
