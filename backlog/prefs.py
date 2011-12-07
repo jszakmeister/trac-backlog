@@ -1,4 +1,4 @@
-# Copyright (C) 2009 John Szakmeister
+# Copyright (C) 2011 Brent Atkinson
 # All rights reserved.
 #
 # This software is licensed as described in the file LICENSE.txt, which
