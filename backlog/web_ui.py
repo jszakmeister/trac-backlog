@@ -173,11 +173,10 @@ class BacklogPlugin(Component):
         return False
 
     def process_request(self, req):
-        mod_perms = ['TICKET_MODIFY','BACKLOG_ADMIN']
+        
         req.perm.require('TICKET_VIEW')
         if req.method == 'POST':
-            for perm in mod_perms:
-                req.perm.require(perm)
+            req.perm.require('BACKLOG_ADMIN')
 
             if 'move_after' in req.path_info:
                 return self._move_after(req)
@@ -210,7 +209,7 @@ class BacklogPlugin(Component):
         data['base_path'] = req.base_path
         data['shown_fields'] = req.session.get('backlog_fields') or self._ticket_fields
 
-        if mod_perms <= req.perm:
+        if 'BACKLOG_ADMIN' in req.perm:
             data['allow_sorting'] = True
 
         add_stylesheet(req, 'backlog/css/backlog.css')
