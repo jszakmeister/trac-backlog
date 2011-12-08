@@ -7,6 +7,9 @@
 <xi:include href="layout.html" />
 <head>
     <title>$title backlog</title>
+    <style type="text/css">
+        @import "${base_path}/chrome/backlog/js/dijit/themes/tundra/tundra.css";
+    </style>
     <script type="text/javascript" src="${base_path}/chrome/backlog/js/dojo/dojo.js" djConfig="parseOnLoad: true"/>
     <script type="text/javascript" src="${base_path}/chrome/backlog/js/dojo/dnd/Container.js" />
     <script type="text/javascript" src="${base_path}/chrome/backlog/js/dojo/dnd/Selector.js" />
@@ -15,6 +18,7 @@
         dojo.require("dojo.parser");
         dojo.require("dojo.dnd.Source");
         dojo.require("dojo.NodeList-fx");
+        dojo.require("dijit.Menu");
 
         <?python
             import re
@@ -22,8 +26,62 @@
                 return milestone_name.replace('_', '__').replace(' ', '_')
         ?>
 
+        var context_target;
+
+        function captureContext(evt) {
+            var target = evt.target;
+            if (target.localName == 'a') {
+                target = target.parentNode.parentNode;
+            }
+            else if (target.localName == 'td') {
+                target = target.parentNode;
+            }
+            context_target = target.id;
+        }
+
         function init() {
+        
+            dojo.addClass(dojo.body(),'tundra');
+
             var tickets = new dojo.dnd.Source("tickets", {singular: true});
+
+            var contextMenu;
+            var topMenuItem;
+            var bottomMenuItem;
+
+            var targets = dojo.query('tr.dojoDndItem').map(
+                function(node) {
+                    return node.id;
+                }
+            );
+            contextMenu = new dijit.Menu({targetNodeIds: targets});
+            topMenuItem = new dijit.MenuItem({label: 'Send to top', onClick: sendToTop});
+            bottomMenuItem = new dijit.MenuItem({label: 'Send to bottom', onClick: sendToBottom});
+            contextMenu.addChild(topMenuItem);
+            contextMenu.addChild(bottomMenuItem);
+            
+            // Set context_target when opening the context menu
+            dojo.connect(contextMenu,'_openMyself',captureContext);
+
+            function sendToTop() {
+                var tickets_table = dojo.query('#tickets_table');
+                var tickets = dojo.query('tr.dojoDndItem');
+                var first_ticket = tickets[0].id;
+                if (context_target != first_ticket) {
+                    moveBefore(tickets_table,context_target,first_ticket);
+                    dojo.place(context_target,first_ticket,'before');
+                }
+            }
+
+            function sendToBottom() {
+                var tickets_table = dojo.query('#tickets_table');
+                var tickets = dojo.query('tr.dojoDndItem');
+                var last_ticket = tickets[tickets.length-1].id;
+                if (context_target != last_ticket) {
+                    moveAfter(tickets_table,context_target,last_ticket);
+                    dojo.place(context_target,last_ticket,'after');
+                }
+            }
 
             function highlightTarget(target, succeeded) {
                 if (succeeded) {
