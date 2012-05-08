@@ -1,0 +1,2 @@
+recursive-include backlog/htdocs *.css *.png *.js
+recursive-include backlog/templates *.html
