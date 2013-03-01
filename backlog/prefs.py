@@ -13,7 +13,7 @@ class BacklogPluginPrefPanel(Component):
     implements(IPreferencePanelProvider, ITemplateProvider)
 
     _form_fields = [ 
-        'id', 'summary', 'component', 'version', 'type', 'owner', 'status', 
+        'id', 'summary', 'component', 'version', 'type', 'owner', 'status',
         'time_created'
     ]
 
@@ -24,15 +24,15 @@ class BacklogPluginPrefPanel(Component):
 
 
     def render_preference_panel(self, req, panel):
-
         if req.method == 'POST':
             fields = req.args.get('backlog_fields')
             req.session['backlog_fields'] = fields
             add_notice(req,_('Your backlog preferences have been saved.'))
             req.redirect(req.href.prefs(panel or None))
-                
+
         return 'prefs_backlog.html', {
-            'shown_fields': req.session.get('backlog_fields') or self._form_fields
+            'shown_fields':
+                req.session.get('backlog_fields') or self._form_fields
         }
 
     # ITemplateProvider methods
@@ -44,4 +44,3 @@ class BacklogPluginPrefPanel(Component):
     def get_templates_dirs(self):
         from pkg_resources import resource_filename
         return [resource_filename(__name__, 'templates')]
-
