@@ -48,6 +48,8 @@
             var contextMenu;
             var topMenuItem;
             var bottomMenuItem;
+            var openInNewWindow;
+            var separator;
 
             var targets = dojo.query('tr.dojoDndItem').map(
                 function(node) {
@@ -57,8 +59,12 @@
             contextMenu = new dijit.Menu({targetNodeIds: targets});
             topMenuItem = new dijit.MenuItem({label: 'Send to top', onClick: sendToTop});
             bottomMenuItem = new dijit.MenuItem({label: 'Send to bottom', onClick: sendToBottom});
+            separator = new dijit.MenuSeparator();
+            openInNewWindowMenuItem = new dijit.MenuItem({label: 'Open in new window', onClick: openInNewWindow});
             contextMenu.addChild(topMenuItem);
             contextMenu.addChild(bottomMenuItem);
+            contextMenu.addChild(separator);
+            contextMenu.addChild(openInNewWindowMenuItem);
             
             // Set context_target when opening the context menu
             dojo.connect(contextMenu,'_openMyself',captureContext);
@@ -81,6 +87,15 @@
                     moveAfter(tickets_table,context_target,last_ticket);
                     dojo.place(context_target,last_ticket,'after');
                 }
+            }
+
+            function openInNewWindow() {
+                window.open(
+                      '${base_path}/ticket/' + getTicketNumber(context_target))
+            }
+
+            function getTicketNumber(id) {
+                return id.split("_")[1];
             }
 
             function highlightTarget(target, succeeded) {
@@ -130,8 +145,8 @@
             }
 
             function moveAfter(target, movedId, afterId) {
-                var movedItemId = movedId.split("_")[1];
-                var afterItemId = afterId.split("_")[1];
+                var movedItemId = getTicketNumber(movedId);
+                var afterItemId = getTicketNumber(afterId);
 
                 var data = {ticket_id: movedItemId,
                             after_ticket_id: afterItemId,
