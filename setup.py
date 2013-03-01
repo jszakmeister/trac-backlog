@@ -42,7 +42,7 @@ drag-and-drop in their web browser to reorder tickets, and to assign tickets
 to a milestone.
 ''',
     url = "https://github.com/jszakmeister/trac-backlog",
-    license = "Simplified BSD",
+    license = "BSD",
     classifiers = [
         'Development Status :: 4 - Beta',
         'Environment :: Plugins',
