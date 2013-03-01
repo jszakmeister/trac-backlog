@@ -43,4 +43,16 @@ to a milestone.
 ''',
     url = "https://github.com/jszakmeister/trac-backlog",
     license = "Simplified BSD",
+    classifiers = [
+        'Development Status :: 4 - Beta',
+        'Environment :: Plugins',
+        'Environment :: Web Environment',
+        'Framework :: Trac',
+        'Intended Audience :: Developers',
+        'Intended Audience :: System Administrators',
+        'License :: OSI Approved :: BSD License',
+        'Natural Language :: English',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2 :: Only',
+    ],
 )
