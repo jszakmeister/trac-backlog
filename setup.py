@@ -34,8 +34,7 @@ Provides ticket backlog management in Trac.  It allows users to use
 drag-and-drop in their web browser to reorder tickets, and to assign tickets
 to a milestone.
 ''',
-      url="https://launchpad.net/trac-backlog",
-      download_url="https://launchpad.net/trac-backlog/+download",
+      url="https://github.com/jszakmeister/trac-backlog",
       license="Simplified BSD",
       )
 
