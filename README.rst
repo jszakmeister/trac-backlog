@@ -27,18 +27,60 @@ tickets, and you may want to consider pulling them all into the unscheduled
 backlog when you do that (so that you can order the all the tickets against
 each other).
 
-Bugs
-====
 
-There are no known bugs at this time.  If you do find some, please report
-them to:
-   <https://github.com/jszakmeister/trac-backlog/issues>
+Dependencies
+------------
+
+It requires simplejson 2.0 or better, and Trac 0.11 or better.
 
 
-Main Website
-============
+Installation
+------------
 
-This project was previously hosted on Launchpad.  It has since moved to
-GitHub.  You can find more about the project at:
-   <https://github.com/jszakmeister/trac-backlog>
+Using ``easy_install``::
 
+    $ easy_install -U TracBacklog
+
+From a tarball::
+
+    python setup.py install
+
+Enable the plugin in trac.ini::
+
+    [components]
+    backlog.* = enabled
+
+
+Configuration
+-------------
+
+Users can customize the fields they see in the Backlog preference pane.
+
+Also, you will need to run ``trac-admin upgrade`` on your database, since the
+plugin needs to create a table and some default values for your tickets.
+
+
+Bugs/Feature Requests
+---------------------
+
+Please use the
+`GitHub site <https://github.com/jszakmeister/trac-backlog/issues>`_ to file any
+bug and feature requests.
+
+
+Source
+------
+
+The plugin is maintained on
+`GitHub <https://github.com/jszakmeister/trac-backlog>`_.
+
+
+Other Solutions
+---------------
+
+A Trac plug-in to help folks use Trac to maintain their backlog when using an
+agile development methodology. See also
+`TracKanbanBoard <https://pypi.python.org/pypi/TracKanbanBoard/0.2>`_,
+`BacklogPlugin <https://trac-hacks.org/wiki/BacklogPlugin>`_,
+`AgiloForTracPlugin <https://trac-hacks.org/wiki/AgiloForTracPlugin>`_,
+`IttecoTracPlugin <https://trac-hacks.org/wiki/IttecoTracPlugin>`_.
