@@ -3,6 +3,9 @@ import backlog
 
 PACKAGE = 'TracBacklog'
 
+with open('README.rst') as file:
+    long_description = file.read()
+
 setup(
     name = PACKAGE,
     version = backlog.get_version(),
@@ -36,11 +39,7 @@ setup(
     author = "John Szakmeister",
     author_email = "john@szakmeister.net",
     description = "Enables Trac to be used for managing your ticket backlog.",
-    long_description = '''
-Provides ticket backlog management in Trac.  It allows users to use
-drag-and-drop in their web browser to reorder tickets, and to assign tickets
-to a milestone.
-''',
+    long_description = long_description,
     url = "https://github.com/jszakmeister/trac-backlog",
     license = "BSD",
     classifiers = [
