@@ -1,5 +1,21 @@
 In Development
 
+ * Added the ability to send tickets to the top or bottom via a context menu.
+   A huge thanks to Brent Atkinson for implementing this feature.
+
+ * TICKET_MODIFY is no longer required to view the backlog, only TICKET_VIEW.
+   Modifying the backlog now requires BACKLOG_MODIFY.  Patch by Brent Atkinson.
+
+ * Added a preference pane to allow users to customize what they see in the
+   backlog.  Patch by Brent Atkinson.
+
+ * Added a Content-Length to the response header, allowing tracd to work
+ * correctly.  Patch by Hiroyuki Wada.
+
+ * Fixed the source distribution on Python 2.6.
+
+ * Added support for Trac 0.12 and 1.0.
+
 TracBacklog 0.2.2 (October 10, 2011)
 
  * Fixed a bug where tickets were missing in the unscheduled view after a
