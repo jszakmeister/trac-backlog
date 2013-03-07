@@ -8,13 +8,15 @@ from trac.core import *
 from trac.prefs import IPreferencePanelProvider
 from trac.util.translation import _
 from trac.web.chrome import add_notice, ITemplateProvider
+from trac.ticket.api import TicketSystem
 
 class BacklogPluginPrefPanel(Component):
     implements(IPreferencePanelProvider, ITemplateProvider)
 
-    _form_fields = [ 
-        'id', 'summary', 'component', 'version', 'type', 'owner', 'status',
-        'time_created'
+    _ticket_fields = [
+        (u'id', u'Id'), (u'summary', u'Summary'), (u'component', u'Component'),
+        (u'version', u'Version'), (u'type', u'Type'), (u'owner', u'Owner'),
+        (u'status', u'Status'), (u'time_created', u'Created')
     ]
 
     # IPreferencePanelProvider methods
@@ -30,9 +32,11 @@ class BacklogPluginPrefPanel(Component):
             add_notice(req,_('Your backlog preferences have been saved.'))
             req.redirect(req.href.prefs(panel or None))
 
+        custom_fields = [(cf["name"], cf["label"]) for cf in TicketSystem(self.env).get_custom_fields()]
         return 'prefs_backlog.html', {
+            'fields': self._ticket_fields + custom_fields,
             'shown_fields':
-                req.session.get('backlog_fields') or self._form_fields
+                req.session.get('backlog_fields') or [field[0] for field in self._ticket_fields]
         }
 
     # ITemplateProvider methods

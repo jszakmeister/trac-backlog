@@ -248,6 +248,7 @@
                         <th py:if="'owner' in shown_fields">Owner</th>
                         <th py:if="'status' in shown_fields">Status</th>
                         <th py:if="'time_created' in shown_fields">Created</th>
+                        <th py:for="cf in custom_fields">${cf[1]}</th>
                     </tr>
                 </thead>
                 <tbody id="tickets">
@@ -260,6 +261,9 @@
                         <td py:if="'owner' in shown_fields">$ticket.owner</td>
                         <td py:if="'status' in shown_fields">$ticket.status</td>
                         <td py:if="'time_created' in shown_fields">${format_date(ticket.time_created)}</td>
+                        <py:for each="cf in custom_fields">
+                            <td>${ticket[cf[0]]}</td>
+                        </py:for>
                     </tr>
                 </tbody>
             </table>
