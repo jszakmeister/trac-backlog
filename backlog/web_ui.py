@@ -82,20 +82,19 @@ class BacklogPlugin(Component):
         if not row or int(row[0]) < schema_version:
             return True
 
-        cur.execute("SELECT COUNT(*) FROM ticket")
-        tickets = cur.fetchone()[0]
-
-        no_backlog = False
-        try:
-            cur.execute("SELECT COUNT(*) FROM backlog")
-            backlog_entries = cur.fetchone()[0]
-        except OperationalError:
-            no_backlog = True
+        cur.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='backlog';")
+        no_backlog = cur.fetchone()[0] == 0
 
         if no_backlog:
             return True
 
-        if tickets != backlog_entries:
+        cur.execute("""SELECT COUNT(id)
+                       FROM ticket
+                           LEFT JOIN backlog ON backlog.ticket_id=ticket.id
+                       WHERE backlog.ticket_id IS NULL""")
+        tickets_without_rank = cur.fetchone()[0]
+
+        if tickets_without_rank > 0:
             return True
 
         return False
