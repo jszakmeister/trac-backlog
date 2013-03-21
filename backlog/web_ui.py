@@ -102,7 +102,8 @@ class BacklogPlugin(Component):
 
     def upgrade_environment(self, db):
         cur = db.cursor()
-        cur.execute("SELECT value FROM system WHERE name='backlog_schema_version'")
+        cur.execute(
+                "SELECT value FROM system WHERE name='backlog_schema_version'")
         row = cur.fetchone()
 
         if not row:
@@ -113,8 +114,9 @@ class BacklogPlugin(Component):
             pass
 
         # Make sure that all tickets have a rank
-        cur.execute("SELECT t.id FROM ticket AS t LEFT JOIN backlog " +
-                    "ON t.id = backlog.ticket_id WHERE backlog.ticket_id IS NULL")
+        cur.execute("SELECT t.id FROM ticket AS t LEFT JOIN backlog "
+                    "ON t.id = backlog.ticket_id WHERE backlog.ticket_id "
+                    "IS NULL")
 
         for row in cur.fetchall():
             ticket_id = row[0]
@@ -348,8 +350,9 @@ class BacklogPlugin(Component):
         req.write(data)
 
     def _get_num_tickets(self, cursor, milestone):
-        cursor.execute("SELECT COUNT(*) FROM ticket WHERE status <> 'closed' AND milestone = %s",
-                       (milestone,));
+        cursor.execute(
+                "SELECT COUNT(*) FROM ticket WHERE status <> 'closed'"
+                "AND milestone = %s", (milestone,));
         return cursor.fetchone()[0]
 
     def _get_active_milestones(self, exclude = None):
