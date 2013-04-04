@@ -175,8 +175,17 @@ class BacklogPlugin(Component):
     def ticket_changed(self, ticket, comment, author, old_values):
         pass
 
-    def ticket_deleted(ticket):
-        pass
+    def ticket_deleted(self, ticket):
+        db = self.env.get_db_cnx()
+        cursor = db.cursor()
+
+        try:
+            cursor.execute("DELETE FROM backlog WHERE ticket_id = %s",
+                           (ticket.id,))
+            db.commit()
+        except:
+            db.rollback()
+            raise
 
     # IRequestHandler methods
     def match_request(self, req):
