@@ -82,6 +82,13 @@ class BacklogPlugin(Component):
         if not row or int(row[0]) < schema_version:
             return True
 
+        cur.execute("SELECT COUNT(*) FROM backlog "
+                    "LEFT JOIN ticket ON ticket.id = backlog.ticket_id "
+                    "WHERE ticket.id IS NULL")
+        num_ranks_without_tickets = cur.fetchone()[0]
+        if num_ranks_without_tickets:
+            return True
+
         cur.execute("SELECT COUNT(*) FROM ticket AS t LEFT JOIN backlog "
                     "ON t.id = backlog.ticket_id WHERE backlog.ticket_id "
                     "IS NULL")
@@ -105,6 +112,10 @@ class BacklogPlugin(Component):
             ### Pass we need to do an upgrade...
             ### We'll implement that later. :-)
             pass
+
+        # Clean out any ranks that don't have tickets.
+        cur.execute("DELETE FROM backlog WHERE ticket_id NOT IN "
+                    "(SELECT id FROM ticket)")
 
         cur.execute("SELECT MAX(rank) FROM backlog")
         row = cur.fetchone()
