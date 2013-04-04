@@ -14,9 +14,9 @@ from trac.perm import IPermissionRequestor
 from trac.ticket.api import ITicketChangeListener
 from trac.ticket.model import Ticket
 from trac.web.chrome import INavigationContributor, ITemplateProvider
-from trac.web.chrome import add_script, add_stylesheet
+from trac.web.chrome import add_stylesheet
 from trac.web.main import IRequestHandler
-from trac.web.api import HTTPBadRequest, RequestDone
+from trac.web.api import HTTPBadRequest
 from trac.util.datefmt import format_date
 from trac.util.html import html
 from trac.util import get_reporter_id
@@ -428,5 +428,3 @@ class BacklogPlugin(Component):
         req.send_header('Content-Length', len(data))
         req.end_headers()
         req.write(data)
-        #raise RequestDone
-
