@@ -82,20 +82,13 @@ class BacklogPlugin(Component):
         if not row or int(row[0]) < schema_version:
             return True
 
-        cur.execute("SELECT COUNT(*) FROM ticket")
-        tickets = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM ticket AS t LEFT JOIN backlog "
+                    "ON t.id = backlog.ticket_id WHERE backlog.ticket_id "
+                    "IS NULL")
 
-        no_backlog = False
-        try:
-            cur.execute("SELECT COUNT(*) FROM backlog")
-            backlog_entries = cur.fetchone()[0]
-        except OperationalError:
-            no_backlog = True
+        num_tickets_without_ranks = cur.fetchone()[0]
 
-        if no_backlog:
-            return True
-
-        if tickets != backlog_entries:
+        if num_tickets_without_ranks:
             return True
 
         return False
@@ -113,6 +106,15 @@ class BacklogPlugin(Component):
             ### We'll implement that later. :-)
             pass
 
+        cur.execute("SELECT MAX(rank) FROM backlog")
+        row = cur.fetchone()
+
+        # If the backlog table is empty, simply start with 1.
+        if row[0] is not None:
+            rank = row[0] + 1
+        else:
+            rank = 1
+
         # Make sure that all tickets have a rank
         cur.execute("SELECT t.id FROM ticket AS t LEFT JOIN backlog "
                     "ON t.id = backlog.ticket_id WHERE backlog.ticket_id "
@@ -123,7 +125,9 @@ class BacklogPlugin(Component):
 
             # Insert a default rank for the ticket, using the ticket id
             cur.execute("INSERT INTO backlog VALUES (%s,%s)",
-                        (ticket_id, ticket_id))
+                        (ticket_id, rank))
+
+            rank += 1
 
         db.commit()
 
@@ -151,10 +155,18 @@ class BacklogPlugin(Component):
     def ticket_created(self, ticket):
         db = self.env.get_db_cnx()
         cursor = db.cursor()
+        cursor.execute("BEGIN")
 
         try:
+            cursor.execute("SELECT MAX(rank) FROM backlog")
+            rank = cursor.fetchone()[0]
+            if rank is None:
+                rank = 1
+            else:
+                rank += 1
+
             cursor.execute("INSERT INTO backlog VALUES (%s, %s)",
-                           (ticket.id, ticket.id))
+                           (ticket.id, rank))
             db.commit()
         except:
             db.rollback()
