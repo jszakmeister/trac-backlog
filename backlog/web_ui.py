@@ -28,7 +28,7 @@ BACKLOG_QUERY = '''SELECT id FROM ticket t
   LEFT JOIN enum p ON p.name = t.priority AND p.type = 'priority'
   LEFT JOIN backlog bp ON bp.ticket_id = t.id
   WHERE status <> 'closed' AND milestone = %s
-  ORDER BY bp.rank, CAST(p.value AS int), t.type, time
+  ORDER BY bp.rank, CAST(p.value AS UNSIGNED INTEGER), t.type, time
 '''
 
 # Need a separate unscheduled backlog query since deleting a
@@ -38,7 +38,7 @@ UNSCHEDULED_BACKLOG_QUERY = '''SELECT id FROM ticket t
   LEFT JOIN enum p ON p.name = t.priority AND p.type = 'priority'
   LEFT JOIN backlog bp ON bp.ticket_id = t.id
   WHERE status <> 'closed' AND (milestone = '' or milestone is null)
-  ORDER BY bp.rank, CAST(p.value AS int), t.type, time
+  ORDER BY bp.rank, CAST(p.value AS UNSIGNED INTEGER), t.type, time
 '''
 
 MILESTONE_QUERY = '''SELECT name, due FROM milestone
