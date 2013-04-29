@@ -24,30 +24,6 @@ from trac.util import get_reporter_id
 from backlog.schema import schema_version, schema
 
 
-BACKLOG_QUERY = '''SELECT id FROM ticket t
-  LEFT JOIN enum p ON p.name = t.priority AND p.type = 'priority'
-  LEFT JOIN backlog bp ON bp.ticket_id = t.id
-  WHERE status <> 'closed' AND milestone = %s
-  ORDER BY bp.rank, CAST(p.value AS int), t.type, time
-'''
-
-# Need a separate unscheduled backlog query since deleting a
-# milestone and re-targeting a ticket can set the milestone field
-# to null, instead of the empty string.
-UNSCHEDULED_BACKLOG_QUERY = '''SELECT id FROM ticket t
-  LEFT JOIN enum p ON p.name = t.priority AND p.type = 'priority'
-  LEFT JOIN backlog bp ON bp.ticket_id = t.id
-  WHERE status <> 'closed' AND (milestone = '' or milestone is null)
-  ORDER BY bp.rank, CAST(p.value AS int), t.type, time
-'''
-
-MILESTONE_QUERY = '''SELECT name, due FROM milestone
-  WHERE completed = 0
-  ORDER BY (due = 0), due, UPPER(name), name
-'''
-
-
-
 class BacklogPlugin(Component):
     implements(INavigationContributor, IRequestHandler,
                IEnvironmentSetupParticipant, ITemplateProvider,
@@ -250,16 +226,34 @@ class BacklogPlugin(Component):
 
         return 'backlog.html', data, None
 
+
+
     def _get_active_tickets(self, milestone = None):
         db = self.env.get_db_cnx()
         cursor = db.cursor()
 
         try:
             if milestone is None:
-                # Check the comment for UNSCHEDULED_BACKLOG_QUERY about
-                # why this is necessary.
+                # Need a separate unscheduled backlog query since deleting a
+                # milestone and re-targeting a ticket can set the milestone field
+                # to null, instead of the empty string.
+                UNSCHEDULED_BACKLOG_QUERY = '''SELECT id FROM ticket t
+                  LEFT JOIN enum p ON p.name = t.priority AND
+                    p.type = 'priority'
+                  LEFT JOIN backlog bp ON bp.ticket_id = t.id
+                  WHERE status <> 'closed' AND
+                    (milestone = '' or milestone is null)
+                  ORDER BY bp.rank, %s, t.type, time
+                ''' % db.cast('p.value', 'int')
                 cursor.execute(UNSCHEDULED_BACKLOG_QUERY)
             else:
+                BACKLOG_QUERY = '''SELECT id FROM ticket t
+                  LEFT JOIN enum p ON p.name = t.priority AND
+                    p.type = 'priority'
+                  LEFT JOIN backlog bp ON bp.ticket_id = t.id
+                  WHERE status <> 'closed' AND milestone = %%s
+                  ORDER BY bp.rank, %s, t.type, time
+                ''' % db.cast('p.value', 'int')
                 cursor.execute(BACKLOG_QUERY, (milestone,))
         except:
             db.rollback()
@@ -402,7 +396,9 @@ class BacklogPlugin(Component):
             results.append(
                 dict(name='(unscheduled)', due='--', num_tickets=num_tickets))
 
-        cursor.execute(MILESTONE_QUERY)
+        cursor.execute('''SELECT name, due FROM milestone
+            WHERE completed = 0
+            ORDER BY (due = 0), due, UPPER(name), name''')
 
         rows = cursor.fetchall()
 
