@@ -1,5 +1,7 @@
 In Development
 
+TracBacklog 0.3.1 (April 29, 2013)
+
  * The corresponding row in the rank table is now deleted when a ticket is
    deleted.
 
