@@ -11,7 +11,7 @@ from trac.core import *
 from trac.db import DatabaseManager
 from trac.env import IEnvironmentSetupParticipant
 from trac.perm import IPermissionRequestor
-from trac.ticket.api import ITicketChangeListener
+from trac.ticket.api import ITicketChangeListener, TicketSystem
 from trac.ticket.model import Ticket
 from trac.web.chrome import INavigationContributor, ITemplateProvider
 from trac.web.chrome import add_stylesheet
@@ -29,9 +29,9 @@ class BacklogPlugin(Component):
                IEnvironmentSetupParticipant, ITemplateProvider,
                ITicketChangeListener, IPermissionRequestor)
 
-    _ticket_fields = [ 
-        'id', 'summary', 'component', 'version', 'type', 'owner', 'status', 
-        'time_created'
+    _ticket_fields = [
+        u'id', u'summary', u'component', u'version', u'type', u'owner', u'status',
+        u'time_created'
     ]
 
     # IEnvironmentSetupParticipant
@@ -217,6 +217,7 @@ class BacklogPlugin(Component):
         data['form_token'] = req.form_token
         data['active_milestones'] = self._get_active_milestones(milestone)
         data['base_path'] = req.base_path
+        data['custom_fields'] = [(cf["name"], cf["label"]) for cf in TicketSystem(self.env).get_custom_fields()]
         data['shown_fields'] = req.session.get('backlog_fields') or self._ticket_fields
 
         if 'BACKLOG_ADMIN' in req.perm:
